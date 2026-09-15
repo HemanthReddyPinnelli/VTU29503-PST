@@ -1,0 +1,54 @@
+import java.util.HashMap;
+import java.util.Map;
+
+class UndergroundSystem {
+    // Helper class to store a single user's check-in status
+    private static class CheckInInfo {
+        String stationName;
+        int time;
+        
+        CheckInInfo(String stationName, int time) {
+            this.stationName = stationName;
+            this.time = time;
+        }
+    }
+
+    // Helper class to aggregate route metrics
+    private static class RouteData {
+        double totalTime = 0;
+        int tripCount = 0;
+    }
+
+    private Map<Integer, CheckInInfo> activeCheckIns;
+    private Map<String, RouteData> routeMetrics;
+
+    public UndergroundSystem() {
+        activeCheckIns = new HashMap<>();
+        routeMetrics = new HashMap<>();
+    }
+    
+    public void checkIn(int id, String stationName, int t) {
+        activeCheckIns.put(id, new CheckInInfo(stationName, t));
+    }
+    
+    public void checkOut(int id, String stationName, int t) {
+        CheckInInfo info = activeCheckIns.remove(id);
+        int tripDuration = t - info.time;
+        
+        // Create a unique identifier string for the route path
+        String routeKey = info.stationName + "->" + stationName;
+        
+        // Fetch or initialize the metrics for this journey pattern
+        routeMetrics.putIfAbsent(routeKey, new RouteData());
+        RouteData data = routeMetrics.get(routeKey);
+        
+        data.totalTime += tripDuration;
+        data.tripCount++;
+    }
+    
+    public double getAverageTime(String startStation, String endStation) {
+        String routeKey = startStation + "->" + endStation;
+        RouteData data = routeMetrics.get(routeKey);
+        return data.totalTime / data.tripCount;
+    }
+}
